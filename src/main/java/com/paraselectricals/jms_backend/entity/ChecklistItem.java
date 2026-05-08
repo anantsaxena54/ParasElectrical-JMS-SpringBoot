@@ -7,7 +7,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 @Entity
-@Table(name = "checklist_items")
+@Table(name = "job_checklist")
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
@@ -19,6 +19,7 @@ public class ChecklistItem {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "job_id", nullable = false)
+    @com.fasterxml.jackson.annotation.JsonIgnore
     private Job job;
 
     @Enumerated(EnumType.STRING)
@@ -28,5 +29,5 @@ public class ChecklistItem {
     @Column(nullable = false)
     private String taskDescription;
 
-    private boolean isCompleted = false;
+    private boolean completed = false;
 }

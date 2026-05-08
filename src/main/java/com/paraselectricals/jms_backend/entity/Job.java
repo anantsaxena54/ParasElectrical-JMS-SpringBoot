@@ -31,8 +31,10 @@ public class Job {
     private String clientName;
 
     private String phoneNumber;
+    private String contactPerson;
     
     private String motorType; // HT / LT / AC / DC
+    private String pole;
     private String capacity; // kW or MW
     private String voltage;
     private String weight;

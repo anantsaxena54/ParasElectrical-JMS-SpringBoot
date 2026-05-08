@@ -34,6 +34,10 @@ public class JobController {
     private PhotoRepository photoRepository;
     @Autowired
     private DocumentRepository documentRepository;
+    @Autowired
+    private ChecklistItemRepository checklistRepository;
+    @Autowired
+    private com.paraselectricals.jms_backend.service.ExcelService excelService;
 
     private final String UPLOAD_DIR = "uploads/";
 
@@ -66,6 +70,9 @@ public class JobController {
         history.setStage(JobStage.RECEIVED);
         history.setNotes("Job created.");
         stageHistoryRepository.save(history);
+        
+        // Add to central Excel sheet
+        excelService.appendJobToExcel(savedJob);
         
         return ResponseEntity.status(HttpStatus.CREATED).body(savedJob);
     }
@@ -134,5 +141,76 @@ public class JobController {
     @GetMapping("/{id}/history")
     public ResponseEntity<List<JobStageHistory>> getHistory(@PathVariable Long id) {
         return ResponseEntity.ok(stageHistoryRepository.findByJobIdOrderByCompletedDateAsc(id));
+    }
+
+    // 8. Get Checklist
+    @GetMapping("/{id}/checklist")
+    public ResponseEntity<List<ChecklistItem>> getChecklist(@PathVariable Long id, @RequestParam String stage) {
+        try {
+            JobStage jobStage = JobStage.valueOf(stage);
+            return ResponseEntity.ok(checklistRepository.findByJobIdAndStage(id, jobStage));
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.badRequest().build();
+        }
+    }
+
+    // 9. Bulk Create/Update Checklist
+    @PutMapping("/{id}/checklist")
+    public ResponseEntity<List<ChecklistItem>> updateChecklist(
+            @PathVariable Long id,
+            @RequestParam String stage,
+            @RequestBody List<java.util.Map<String, Object>> items) {
+        Optional<Job> jobOpt = jobRepository.findById(id);
+        if (jobOpt.isEmpty()) return ResponseEntity.notFound().build();
+        Job job = jobOpt.get();
+        JobStage jobStage;
+        try {
+            jobStage = JobStage.valueOf(stage);
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.badRequest().build();
+        }
+
+        // Clear existing items for this job+stage and recreate
+        List<ChecklistItem> existing = checklistRepository.findByJobIdAndStage(id, jobStage);
+        
+        List<ChecklistItem> toSave = new java.util.ArrayList<>();
+        for (java.util.Map<String, Object> dto : items) {
+            String taskDescription = (String) dto.get("taskDescription");
+            boolean completed = Boolean.TRUE.equals(dto.get("completed"));
+            Object rawId = dto.get("id");
+            
+            ChecklistItem item = null;
+            if (rawId != null) {
+                Long itemId = ((Number) rawId).longValue();
+                item = existing.stream().filter(e -> e.getId().equals(itemId)).findFirst().orElse(null);
+            }
+            if (item == null) {
+                item = new ChecklistItem();
+                item.setJob(job);
+                item.setStage(jobStage);
+            }
+            item.setTaskDescription(taskDescription);
+            item.setCompleted(completed);
+            toSave.add(item);
+        }
+
+        return ResponseEntity.ok(checklistRepository.saveAll(toSave));
+    }
+
+    @GetMapping("/master-sheet")
+    public ResponseEntity<org.springframework.core.io.Resource> downloadMasterSheet() {
+        try {
+            Path path = Paths.get("reports/JobMasterSheet.xlsx");
+            if (!Files.exists(path)) {
+                return ResponseEntity.notFound().build();
+            }
+            org.springframework.core.io.Resource resource = new org.springframework.core.io.UrlResource(path.toUri());
+            return ResponseEntity.ok()
+                    .header(org.springframework.http.HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"JobMasterSheet.xlsx\"")
+                    .contentType(org.springframework.http.MediaType.parseMediaType("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"))
+                    .body(resource);
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+        }
     }
 }
