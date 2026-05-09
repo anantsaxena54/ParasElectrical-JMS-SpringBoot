@@ -46,6 +46,8 @@ public class Job {
 
     private LocalDate expectedDeliveryDate;
 
+    private LocalDate startDate; // when job entered the workshop
+
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     private JobStage currentStage;

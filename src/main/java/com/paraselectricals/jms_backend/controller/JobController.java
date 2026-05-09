@@ -214,6 +214,32 @@ public class JobController {
         }
     }
 
+    // 9b. Update Job Details
+    @PutMapping("/{id}")
+    public ResponseEntity<Job> updateJob(@PathVariable Long id, @RequestBody Job jobDetails) {
+        Optional<Job> jobOpt = jobRepository.findById(id);
+        if (jobOpt.isEmpty()) return ResponseEntity.notFound().build();
+
+        Job job = jobOpt.get();
+        // Update fields (except ID and system fields)
+        job.setClientName(jobDetails.getClientName());
+        job.setPhoneNumber(jobDetails.getPhoneNumber());
+        job.setContactPerson(jobDetails.getContactPerson());
+        job.setMotorType(jobDetails.getMotorType());
+        job.setPole(jobDetails.getPole());
+        job.setCapacity(jobDetails.getCapacity());
+        job.setVoltage(jobDetails.getVoltage());
+        job.setWeight(jobDetails.getWeight());
+        job.setProblemReported(jobDetails.getProblemReported());
+        job.setPriority(jobDetails.getPriority());
+        job.setExpectedDeliveryDate(jobDetails.getExpectedDeliveryDate());
+        job.setStartDate(jobDetails.getStartDate());
+        job.setAssignedPerson(jobDetails.getAssignedPerson());
+
+        Job updatedJob = jobRepository.save(job);
+        return ResponseEntity.ok(updatedJob);
+    }
+
     // 10. Delete Job
     @DeleteMapping("/{id}")
     @org.springframework.transaction.annotation.Transactional

@@ -17,7 +17,7 @@ public class ExcelService {
     private final String[] COLUMNS = {
         "Job ID", "Date", "Client", "Contact Person", "Phone", 
         "Motor Type", "Pole", "Capacity", "Voltage", "Weight", 
-        "Problem Reported", "Priority", "Expected Delivery"
+        "Problem Reported", "Priority", "Expected Delivery", "Start Date"
     };
 
     public synchronized void appendJobToExcel(Job job) {
@@ -71,6 +71,7 @@ public class ExcelService {
             row.createCell(10).setCellValue(job.getProblemReported() != null ? job.getProblemReported() : "");
             row.createCell(11).setCellValue(job.getPriority() != null ? job.getPriority() : "");
             row.createCell(12).setCellValue(job.getExpectedDeliveryDate() != null ? job.getExpectedDeliveryDate().toString() : "");
+            row.createCell(13).setCellValue(job.getStartDate() != null ? job.getStartDate().toString() : "");
 
             // Auto-size columns
             for (int i = 0; i < COLUMNS.length; i++) {
