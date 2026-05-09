@@ -213,4 +213,57 @@ public class JobController {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
         }
     }
+
+    // 10. Delete Job
+    @DeleteMapping("/{id}")
+    @org.springframework.transaction.annotation.Transactional
+    public ResponseEntity<?> deleteJob(@PathVariable Long id) {
+        Optional<Job> jobOpt = jobRepository.findById(id);
+        if (jobOpt.isEmpty()) return ResponseEntity.notFound().build();
+
+        Job job = jobOpt.get();
+
+        // 1. Delete Photos and physical files
+        List<Photo> photos = photoRepository.findByJobId(id);
+        for (Photo photo : photos) {
+            try {
+                Path path = Paths.get(UPLOAD_DIR + photo.getFilePath());
+                Files.deleteIfExists(path);
+            } catch (IOException e) {
+                System.err.println("Failed to delete photo file: " + e.getMessage());
+            }
+        }
+        photoRepository.deleteAll(photos);
+
+        // 2. Delete Documents and physical files
+        List<Document> docs = documentRepository.findByJobId(id);
+        for (Document doc : docs) {
+            try {
+                Path path = Paths.get(UPLOAD_DIR + doc.getFilePath());
+                Files.deleteIfExists(path);
+            } catch (IOException e) {
+                System.err.println("Failed to delete document file: " + e.getMessage());
+            }
+        }
+        documentRepository.deleteAll(docs);
+
+        // 3. Delete Notes
+        List<Note> notes = noteRepository.findByJobIdOrderByTimestampDesc(id);
+        noteRepository.deleteAll(notes);
+
+        // 4. Delete Stage History
+        List<JobStageHistory> history = stageHistoryRepository.findByJobIdOrderByCompletedDateAsc(id);
+        stageHistoryRepository.deleteAll(history);
+
+        // 5. Delete Checklist Items
+        // findByJobId is not directly in the repo, so we use a custom stream filter if necessary
+        // or just add it to the repo. Let's add it to the repo for cleanliness if possible.
+        // For now, let's use the stream filter.
+        checklistRepository.deleteAll(checklistRepository.findAll().stream().filter(i -> i.getJob().getId().equals(id)).collect(java.util.stream.Collectors.toList()));
+
+        // 6. Delete Job
+        jobRepository.delete(job);
+
+        return ResponseEntity.ok().build();
+    }
 }
