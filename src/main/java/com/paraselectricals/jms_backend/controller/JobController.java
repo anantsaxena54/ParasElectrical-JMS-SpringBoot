@@ -198,17 +198,19 @@ public class JobController {
     }
 
     @GetMapping("/master-sheet")
-    public ResponseEntity<org.springframework.core.io.Resource> downloadMasterSheet() {
+    public ResponseEntity<byte[]> downloadMasterSheet() {
         try {
-            Path path = Paths.get("reports/JobMasterSheet.xlsx");
-            if (!Files.exists(path)) {
-                return ResponseEntity.notFound().build();
+            List<Job> allJobs = jobRepository.findAll();
+            byte[] excelContent = excelService.generateFullExcel(allJobs);
+            
+            if (excelContent == null) {
+                return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
             }
-            org.springframework.core.io.Resource resource = new org.springframework.core.io.UrlResource(path.toUri());
+
             return ResponseEntity.ok()
                     .header(org.springframework.http.HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"JobMasterSheet.xlsx\"")
                     .contentType(org.springframework.http.MediaType.parseMediaType("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"))
-                    .body(resource);
+                    .body(excelContent);
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
         }
