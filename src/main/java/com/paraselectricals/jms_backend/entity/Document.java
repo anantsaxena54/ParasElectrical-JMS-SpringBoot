@@ -1,5 +1,6 @@
 package com.paraselectricals.jms_backend.entity;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -19,6 +20,7 @@ public class Document {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    @JsonIgnore
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "job_id", nullable = false)
     private Job job;
@@ -27,7 +29,9 @@ public class Document {
     private String documentType; // Test Reports, Drawings, Quotations, Delivery Challan, Inspection Reports
 
     @Column(nullable = false)
-    private String filePath;
+    private String filePath;   // Cloudinary secure_url (permanent HTTPS CDN URL)
+
+    private String publicId;   // Cloudinary public_id — used for deletion
 
     @Column(nullable = false)
     private String originalFilename;

@@ -9,6 +9,8 @@ import org.hibernate.annotations.CreationTimestamp;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
 
 @Entity
 @Table(name = "jobs")
@@ -56,4 +58,15 @@ public class Job {
 
     @CreationTimestamp
     private LocalDateTime createdAt;
+
+    // Relations — lazy by default, eagerly loaded only when needed via JOIN FETCH
+    @OneToMany(mappedBy = "job", fetch = FetchType.LAZY)
+    private List<Photo> photos = new ArrayList<>();
+
+    @OneToMany(mappedBy = "job", fetch = FetchType.LAZY)
+    private List<Note> notes = new ArrayList<>();
+
+    @OneToMany(mappedBy = "job", fetch = FetchType.LAZY)
+    private List<Document> documents = new ArrayList<>();
 }
+

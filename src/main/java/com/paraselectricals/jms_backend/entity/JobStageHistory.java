@@ -1,5 +1,6 @@
 package com.paraselectricals.jms_backend.entity;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.paraselectricals.jms_backend.enums.JobStage;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
@@ -20,6 +21,7 @@ public class JobStageHistory {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    @JsonIgnore
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "job_id", nullable = false)
     private Job job;

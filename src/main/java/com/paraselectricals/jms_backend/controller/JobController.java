@@ -41,10 +41,10 @@ public class JobController {
 
     private final String UPLOAD_DIR = "uploads/";
 
-    // 1. Get all jobs (Dashboard)
+    // 1. Get all jobs (Dashboard) — uses JOIN FETCH to avoid N+1
     @GetMapping
     public ResponseEntity<List<Job>> getAllJobs() {
-        return ResponseEntity.ok(jobRepository.findAll());
+        return ResponseEntity.ok(jobRepository.findAllWithRelations());
     }
 
     // 2. Get single job details
@@ -284,10 +284,7 @@ public class JobController {
         stageHistoryRepository.deleteAll(history);
 
         // 5. Delete Checklist Items
-        // findByJobId is not directly in the repo, so we use a custom stream filter if necessary
-        // or just add it to the repo. Let's add it to the repo for cleanliness if possible.
-        // For now, let's use the stream filter.
-        checklistRepository.deleteAll(checklistRepository.findAll().stream().filter(i -> i.getJob().getId().equals(id)).collect(java.util.stream.Collectors.toList()));
+        checklistRepository.deleteByJobId(id);
 
         // 6. Delete Job
         jobRepository.delete(job);

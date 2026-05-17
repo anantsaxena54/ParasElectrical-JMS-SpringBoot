@@ -1,5 +1,6 @@
 package com.paraselectricals.jms_backend.entity;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.paraselectricals.jms_backend.enums.JobStage;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
@@ -20,6 +21,7 @@ public class Photo {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    @JsonIgnore
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "job_id", nullable = false)
     private Job job;
@@ -28,7 +30,9 @@ public class Photo {
     private String bucketType; // BEFORE_REPAIR, DURING_WORK, FINAL_COMPLETION
 
     @Column(nullable = false)
-    private String filePath;
+    private String filePath;   // Cloudinary secure_url (permanent HTTPS CDN URL)
+
+    private String publicId;   // Cloudinary public_id — used for deletion
 
     private String uploader;
 
