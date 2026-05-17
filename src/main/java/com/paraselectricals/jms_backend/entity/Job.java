@@ -9,8 +9,8 @@ import org.hibernate.annotations.CreationTimestamp;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.List;
+import java.util.HashSet;
+import java.util.Set;
 
 @Entity
 @Table(name = "jobs")
@@ -59,14 +59,15 @@ public class Job {
     @CreationTimestamp
     private LocalDateTime createdAt;
 
-    // Relations — lazy by default, eagerly loaded only when needed via JOIN FETCH
+    // Relations — use Set (not List) to allow Hibernate to JOIN FETCH multiple collections
+    // simultaneously without triggering MultipleBagFetchException
     @OneToMany(mappedBy = "job", fetch = FetchType.LAZY)
-    private List<Photo> photos = new ArrayList<>();
+    private Set<Photo> photos = new HashSet<>();
 
     @OneToMany(mappedBy = "job", fetch = FetchType.LAZY)
-    private List<Note> notes = new ArrayList<>();
+    private Set<Note> notes = new HashSet<>();
 
     @OneToMany(mappedBy = "job", fetch = FetchType.LAZY)
-    private List<Document> documents = new ArrayList<>();
+    private Set<Document> documents = new HashSet<>();
 }
 
