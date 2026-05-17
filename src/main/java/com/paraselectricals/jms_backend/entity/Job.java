@@ -4,6 +4,7 @@ import com.paraselectricals.jms_backend.enums.JobStage;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
+import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 import org.hibernate.annotations.CreationTimestamp;
 
@@ -60,13 +61,17 @@ public class Job {
     private LocalDateTime createdAt;
 
     // Relations — use Set (not List) to allow Hibernate to JOIN FETCH multiple collections
-    // simultaneously without triggering MultipleBagFetchException
+    // simultaneously without triggering MultipleBagFetchException.
+    // Excluded from equals/hashCode to prevent infinite recursion (Job → Set<Photo> → Photo → Job → ...)
+    @EqualsAndHashCode.Exclude
     @OneToMany(mappedBy = "job", fetch = FetchType.LAZY)
     private Set<Photo> photos = new HashSet<>();
 
+    @EqualsAndHashCode.Exclude
     @OneToMany(mappedBy = "job", fetch = FetchType.LAZY)
     private Set<Note> notes = new HashSet<>();
 
+    @EqualsAndHashCode.Exclude
     @OneToMany(mappedBy = "job", fetch = FetchType.LAZY)
     private Set<Document> documents = new HashSet<>();
 }
